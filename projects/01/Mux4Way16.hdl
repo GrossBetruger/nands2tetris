@@ -16,5 +16,29 @@ CHIP Mux4Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    And(a=sel[0], b=sel[1], out=selThree);
+    Or(a=sel[0], b=sel[1], out=selNotZero);
+    Not(in=selNotZero, out=selZero);
+    Xor(a=sel[0], b=sel[1], out=selOneOrThree);
+    And(a=selOneOrThree, b=sel[0], out=selOne);
+    And(a=selOneOrThree, b=sel[1], out=selTwo);
+
+    Const16(const=selZero, out=selZero16);
+    And16(a=a, b=selZero16, out=busa);
+
+    Const16(const=selOne, out=selOne16);
+    And16(a=b, b=selOne16, out=busb);
+
+    Const16(const=selTwo, out=selTwo16);
+    And16(a=c, b=selTwo16, out=busc);
+
+    Const16(const=selThree, out=selThree16);
+    And16(a=d, b=selThree16, out=busd);
+
+    Or16(a=busa, b=busb, out=busaOrbusb);
+    Or16(a=busc, b=busd, out=buscOrbusd);
+
+    Or16(a=busaOrbusb, b=buscOrbusd, out=out);
+
+
 }
