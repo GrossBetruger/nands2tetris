@@ -32,5 +32,4 @@ CHIP DMux4Way {
     And(a=selTwo, b=in, out=c);
     And(a=selThree, b=in, out=d);
 
-
 }

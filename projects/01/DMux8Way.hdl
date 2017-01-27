@@ -16,5 +16,20 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    // Put your code here:
+    Nand(a=sel[2], b=true, out=zeroToThree);
+    Not(in=zeroToThree, out=FourToSeven);
+
+    DMux4Way(in=in, sel=sel[0..1], a=aRaw, b=bRaw, c=cRaw, d=dRaw);
+    DMux4Way(in=in, sel=sel[0..1], a=eRaw, b=fRaw, c=gRaw, d=hRaw);
+
+    And(a=aRaw, b=zeroToThree, out=a);
+    And(a=bRaw, b=zeroToThree, out=b);
+    And(a=cRaw, b=zeroToThree, out=c);
+    And(a=dRaw, b=zeroToThree, out=d);
+
+    And(a=eRaw, b=FourToSeven, out=e);
+    And(a=fRaw, b=FourToSeven, out=f);
+    And(a=gRaw, b=FourToSeven, out=g);
+    And(a=hRaw, b=FourToSeven, out=h);
+
 }
