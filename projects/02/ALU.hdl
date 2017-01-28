@@ -42,5 +42,49 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+    // handle x flags
+
+    Not(in=zx, out=Notzx);
+    Const16(const=Notzx, out=zx16);
+    And16(a=x, b=zx16, out=xAfterzx);
+
+    Const16(const=nx, out=nx16);
+    Xor16(a=xAfterzx, b=nx16, out=xAfternx);
+
+    // handle y flags
+
+    Not(in=zy, out=Notzy);
+    Const16(const=Notzy, out=zy16);
+    And16(a=y, b=zy16, out=yAfterzy);
+
+    Const16(const=ny, out=ny16);
+    Xor16(a=yAfterzy, b=ny16, out=yAfterny);
+
+    // handle f
+    And16(a=xAfternx, b=yAfterny, out=outAnd);
+    Add16(a=xAfternx, b=yAfterny, out=outAdd);
+
+    Const16(const=f, out=f16);
+    Not(in=f, out=Notf);
+    Const16(const=Notf, out=Notf16);
+
+    And16(a=outAdd, b=f16, out=outAddf);
+    And16(a=outAnd, b=Notf16, out=outAndf);
+
+    Or16(a=outAddf, b=outAndf, out=outf);
+
+    // handle 'no' flag
+    Const16(const=no, out=no16);
+    Not16(in=outf, out=notOut);
+
+    // nullify output in case we switch with !output
+    Not(in=no, out=Notno);
+    Const16(const=Notno, out=Notno16);
+    And16(a=Notno16, b=outf, out=outfReady);
+    And16(a=no16, b=notOut, out=notOutReady);
+
+    // final output
+    Or16(a=notOutReady, b=outfReady, out=out);
+
+
 }
