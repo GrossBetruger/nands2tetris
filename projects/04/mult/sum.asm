@@ -1,0 +1,17 @@
+@0
+D=M
+@n
+M=D
+(LOOP)
+@sum
+M=M+D
+D=D-1
+@LOOP
+D;JGT
+@sum
+D=M
+@1
+M=D
+(END)
+@END
+0;JMP
