@@ -42,31 +42,55 @@ CHIP CPU {
     Not(in=instruction[15], out=Ainstruction);
     Not(in=Ainstruction, out=Cinstruction);
 
-    And(a=instruction[12], b=true, out=aBit);
-    Or(a=aBit, b=Ainstruction, out=aBitOrAinstruction);
+    Not(in=instruction[12], out=NotaBit);
+    Or(a=NotaBit, b=Ainstruction, out=aBitOrAinstruction);
 
-    And(a=true, b=instruction[11], out=c1);
-    And(a=true, b=instruction[10], out=c2);
-    And(a=true, b=instruction[9], out=c3);
-    And(a=true, b=instruction[8], out=c4);
-    And(a=true, b=instruction[7], out=c5);
-    And(a=true, b=instruction[6], out=c6);
+    And(a=Cinstruction, b=instruction[11], out=c1);
+    And(a=Cinstruction, b=instruction[10], out=c2);
+    And(a=Cinstruction, b=instruction[9], out=c3);
+    And(a=Cinstruction, b=instruction[8], out=c4);
+    And(a=Cinstruction, b=instruction[7], out=c5);
+    And(a=Cinstruction, b=instruction[6], out=c6);
 
-    And(a=true, b=instruction[5], out=d1);
-    And(a=true, b=instruction[4], out=d2);
-    And(a=true, b=instruction[3], out=d3);
+    And(a=Cinstruction, b=instruction[5], out=d1);
+    And(a=Cinstruction, b=instruction[4], out=d2);
+    And(a=Cinstruction, b=instruction[3], out=d3);
+
+    And(a=Cinstruction, b=instruction[2], out=j1);
+    And(a=Cinstruction, b=instruction[1], out=j2);
+    And(a=Cinstruction, b=instruction[0], out=j3);
 
     Mux16(a=instruction, b=ALUout, sel=Cinstruction, out=AregisterIn);
     Or(a=Ainstruction, b=d1, out=loadARegister);
-    ARegister(in=AregisterIn, load=loadARegister, out=Aout);
+    ARegister(in=AregisterIn, load=loadARegister, out=Aout, out[0..14]=addressM);
     DRegister(in=ALUout, load=d2, out=ALUinD);
 
     Mux16(a=inM, b=Aout, sel=aBitOrAinstruction, out=AorM);
 
     Or(a=Ainstruction, b=false, out=onlyA);
     Or(a=onlyA, b=false, out=fADD);
-    ALU(x=ALUinD, y=AorM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=ALUout, zr=resZero, ng=resNeg);
+    Or(a=c1, b=Ainstruction, out=c1OrAinstruction);
+    Or(a=c2, b=Ainstruction, out=c2OrAinstruction);
+    ALU(x=ALUinD, y=AorM, zx=c1OrAinstruction, nx=c2OrAinstruction, zy=c3, ny=c4, f=c5, no=c6, out=ALUout, zr=resZero, ng=resNeg);
 
     And16(a=ALUout, b=true, out=outM);
     And(a=true, b=d3, out=writeM);
+
+    // handle jumps
+    Not(in=resZero, out=NotResZero);
+    Not(in=resNeg, out=NotresNeg);
+    And(a=NotResZero, b=NotresNeg, out=NotZeroAndNotNeg);
+    And(a=j1, b=j3, out=jmpDiff);
+
+    And(a=resZero, b=j2, out=EqJump);
+    And(a=NotZeroAndNotNeg, b=j3, out=GTJump);
+    And(a=resNeg, b=j1, out=LTJump);
+    And(a=NotResZero, b=jmpDiff, out=NotEQJump);
+
+    Or(a=EqJump, b=GTJump, out=GTorEQjmp);
+    Or(a=LTJump, b=NotEQJump, out=LTorNEQjmp);
+    Or(a=GTorEQjmp, b=LTorNEQjmp, out=PCload);
+    Not(in=PCload, out=PCinc);
+
+    PC(in=Aout, load=PCload, inc=PCinc, reset=reset, out[0..14]=pc);
 }
