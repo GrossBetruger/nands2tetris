@@ -57,7 +57,7 @@ def clear_whitespace(lines):
 
 
 def is_label(code_line):
-	if re.search("^\(\w+\)$", code_line):
+	if re.search("^\(.+\)$", code_line):
 		return True 
 	return False
 
@@ -79,9 +79,11 @@ def clear_brackets(label):
 
 
 def add_labels(lines_of_code):
+	labels_marked = int()
 	for i, line in enumerate(lines_of_code):
 		if is_label(line):
-			symbols_table[clear_brackets(line)] = num_to_bin16(i)
+			symbols_table[clear_brackets(line)] = num_to_bin16(i-labels_marked)
+			labels_marked += 1
 
 
 def clear_labels(lines_of_code):
@@ -96,6 +98,7 @@ def read_opcode(line_of_code):
 
 
 def read_A_instruction(A_instruction):
+	global next_available_register
 	val = A_instruction[1:]
 	if all([c.isdigit() for c in val]):
 		return num_to_bin16(int(val))
@@ -110,7 +113,7 @@ def read_A_instruction(A_instruction):
 
 def read_C_instruction(C_instruction):
 	# dest=comp;jump 
-	#dest or jump can be omitted
+	# dest or jump can be omitted
 	dest = "null" if "=" not in C_instruction else C_instruction.split("=")[0] 
 	jump =  "null" if ";" not in C_instruction else C_instruction.split(";")[-1]
 	lexed = re.split("(=|;)", C_instruction)
@@ -124,10 +127,12 @@ if __name__=="__main__":
 		parse(sys.argv[1])
 	except Exception as e:
 		print "USAGE: python assembler.py code.asm"
+		print e
 	quit()
 
-	parsed =  parse("add/Add.asm")
-	# parsed = parse("max/Max.asm")
+	# parsed =  parse("add/Add.asm")
+	parsed = parse("../04/fill/Fill.asm")
+	quit()
 	for line in parsed:
 		if read_opcode(line) == "A_instruction":
 			print read_A_instruction(line)
