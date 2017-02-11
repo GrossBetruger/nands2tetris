@@ -1,4 +1,6 @@
 import re
+from commands import *
+import sys
 
 # Arithmetic operations
 ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT = 0, 1, 2, 3, 4, 5, 6, 7, 8
@@ -8,9 +10,9 @@ ARITHMETIC_COMMANDS = set(['add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', '
 PUSH, POP = 9, 10
 
 # VM memory segments
-SP, LCL, ARG, THIS, THAT = 0, 1, 2, 3, 4
+SP, LCL, ARG, THIS, THAT, TEMP = 0, 1, 2, 3, 4, 5
 
-DEST_DICT = {"local": "LCL", "argument" : "ARG", "this": "THIS", "that" : "THAT"}
+DEST_DICT = {"local": "LCL", "argument" : "ARG", "this": "THIS", "that" : "THAT", "temp": "TEMP"}
 
 # Command types
 C_ARITHMETIC, C_PUSH, C_POP, C_LABEL, \
@@ -20,75 +22,6 @@ C_GOTO, C_IF, C_FUNCTION, C_RETURN, C_CALL = \
 C_PUSH = 'push'
 C_POP = 'pop'
 
-
-PUSH_CMD = \
-"""
-@{0}
-D=A
-@{1}
-D=D+M
-
-A=D
-D=M
-@SP
-A=M
-M=D
-
-@SP
-M=M+1
-"""
-
-PUSH_CMD_CONST = \
-"""
-@{}
-D=A
-
-@SP
-A=M
-M=D
-
-@SP
-M=M+1
-"""
-
-POP_CMD = \
-"""
-@{0}
-D=A
-@{1} 
-D=D+M
-@target_address
-M=D
-
-@SP
-A=M
-D=M
-@target_address
-A=M
-M=D
-
-@SP
-M=M-1
-"""
-
-# POP_LCL = \
-# """
-# @SP
-# A=M
-# D=M
-# @LCL
-# M=D
-# """
-
-ADD_OFFSET = \
-"""
-@2
-D=A
-@LCL 
-D=D+A
-@target_address
-M=D
-"""
 
 def read_vm_file(vm_file_name):
     with open(vm_file_name) as f:
@@ -114,8 +47,28 @@ def command_wrapper(lexems):
         return memory_wrapper(cmd_type, dest, offset)
 
 
+def glue_commands(cmd_lst):
+    return "\n".join(cmd_lst)
+
+
 def arithmetic_wrapper(cmd_type):
-    pass
+    eq = glue_commands([POP_X_Y_CMD, EQ_CMD, BOOL_RESULT_CMD])
+    gt = glue_commands([POP_X_Y_CMD, GT_CMD, BOOL_RESULT_CMD])
+    lt = glue_commands([POP_X_Y_CMD, LT_CMD, BOOL_RESULT_CMD])
+    logical_and = glue_commands([POP_X_Y_CMD, AND_CMD, BOOL_RESULT_CMD])
+    logical_or = glue_commands([POP_X_Y_CMD, OR_CMD, BOOL_RESULT_CMD])
+    logical_not = glue_commands([POP_X_Y_CMD, NOT_CMD, BOOL_RESULT_CMD])
+
+    add = glue_commands([POP_X_Y_CMD, ADD_CMD])
+    sub = glue_commands([POP_X_Y_CMD, SUB_CMD])
+    neg = glue_commands([POP_X_CMD, NEG_CMD])
+
+
+    ARITHMETIC_DICT = {'eq' : eq, 'sub': sub, 'add': add, 'gt': gt, \
+                       'lt': lt, 'neg': neg, 'and': logical_and, \
+                       'or' : logical_or, 'not': logical_not}
+
+    return ARITHMETIC_DICT[cmd_type]
 
 
 def memory_wrapper(cmd_type, dest, offset):
@@ -127,6 +80,8 @@ def memory_wrapper(cmd_type, dest, offset):
 
 
 def write_push_code(stack_base, offset):
+    if stack_base == "TEMP":
+        return PUSH_CMD_CONST.format(5 + int(offset))
     if stack_base == None:
         return PUSH_CMD_CONST.format(offset)
 
@@ -134,12 +89,14 @@ def write_push_code(stack_base, offset):
 
 
 def write_pop_code(stack_base, offset):
+    if stack_base == "TEMP":
+        return POP_CMD_CONST.format(5 + int(offset))
     return POP_CMD.format(offset, stack_base)
 
 
 def parser(lines_of_code):
     for line in lines_of_code:
-        print r"\\", line
+        print r"//", line
         print command_wrapper(lexer(line))
 
 
@@ -149,6 +106,15 @@ pop_exp_3 = "pop local 0"
 push_exm1 = "push this 6"
 
 if __name__ == "__main__":
+
+    # print parser(["pop temp 6"])
+    # quit()
+    code = read_vm_file(sys.argv[1])
+    parser(code)
+    quit()
+    print POP_X_Y_CMD
+    print EQ_CMD
+    quit()
     code = read_vm_file("../test2.vm")
 
     parser(code)
