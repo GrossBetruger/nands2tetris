@@ -3,6 +3,8 @@ from commands import *
 import sys
 
 # Arithmetic operations
+BOOLEAN_OPERATIONS = set(['eq', 'gt', 'lt', 'or', 'and', 'not'])
+BOOL_COUNT = 0
 ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT = 0, 1, 2, 3, 4, 5, 6, 7, 8
 ARITHMETIC_COMMANDS = set(['add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', 'not'])
 
@@ -40,6 +42,7 @@ def lexer(command):
 
 def command_wrapper(lexems):
     cmd_type = lexems[0]
+    command_counter(cmd_type)
     if cmd_type in ARITHMETIC_COMMANDS:
         return arithmetic_wrapper(cmd_type)
     else:
@@ -51,13 +54,30 @@ def glue_commands(cmd_lst):
     return "\n".join(cmd_lst)
 
 
+def command_counter(cmd_type):
+    global BOOL_COUNT
+    if cmd_type in BOOLEAN_OPERATIONS:
+        BOOL_COUNT += 1
+
+
 def arithmetic_wrapper(cmd_type):
-    eq = glue_commands([POP_X_Y_CMD, EQ_CMD, BOOL_RESULT_CMD])
-    gt = glue_commands([POP_X_Y_CMD, GT_CMD, BOOL_RESULT_CMD])
-    lt = glue_commands([POP_X_Y_CMD, LT_CMD, BOOL_RESULT_CMD])
-    logical_and = glue_commands([POP_X_Y_CMD, AND_CMD, BOOL_RESULT_CMD])
-    logical_or = glue_commands([POP_X_Y_CMD, OR_CMD, BOOL_RESULT_CMD])
-    logical_not = glue_commands([POP_X_Y_CMD, NOT_CMD, BOOL_RESULT_CMD])
+    global BOOL_COUNT
+    bool_cmd = BOOL_RESULT_CMD.format(BOOL_COUNT)
+    bool_jmp_dict = {'and': 'JGT',
+                     'eq': 'JEQ',
+                     'gt': 'JGT',
+                     'lt': 'JLT',
+                     'not': 'JEQ',
+                     'or': 'JGT'}
+    tf_jump  = TF_JMP.format(BOOL_COUNT, bool_jmp_dict.get(cmd_type))
+
+    eq = glue_commands([POP_X_Y_CMD, EQ_CMD, tf_jump, bool_cmd])
+    gt = glue_commands([POP_X_Y_CMD, GT_CMD, tf_jump, bool_cmd])
+    lt = glue_commands([POP_X_Y_CMD, LT_CMD, tf_jump, bool_cmd])
+
+    logical_and = glue_commands([POP_X_Y_CMD, AND_CMD])
+    logical_or = glue_commands([POP_X_Y_CMD, OR_CMD])
+    logical_not = glue_commands([POP_X_Y_CMD, NOT_CMD])
 
     add = glue_commands([POP_X_Y_CMD, ADD_CMD])
     sub = glue_commands([POP_X_Y_CMD, SUB_CMD])
@@ -106,12 +126,18 @@ pop_exp_3 = "pop local 0"
 push_exm1 = "push this 6"
 
 if __name__ == "__main__":
-
+    # code = read_vm_file("/home/oren/Nand2Tetris/nand2tetris/projects/07/VMTranslator/and.vm")
+    # parser(code)
+    # quit()
+    # code = read_vm_file("/home/oren/Nand2Tetris/nand2tetris/projects/07/StackArithmetic/StackTest/StackTest.vm")
+    # parser(code)
+    # quit()
     # print parser(["pop temp 6"])
     # quit()
     code = read_vm_file(sys.argv[1])
     parser(code)
     quit()
+    
     print POP_X_Y_CMD
     print EQ_CMD
     quit()

@@ -204,31 +204,35 @@ EQ_CMD = \
 D=M
 @y
 D=D-M
-@TRUE
-D;JEQ
-@FALSE
+"""
+
+TF_JMP = \
+"""
+@TRUE_{0}
+D;{1}
+@FALSE_{0}
 0;JMP
 """
 
 BOOL_RESULT_CMD= \
 """
-(TRUE)
+(TRUE_{0})
 @SP
 A=M
 M=1
 
-@END
+@TF_END_{0}
 0;JMP
 
-(FALSE)
+(FALSE_{0})
 @SP
 A=M
 M=0
 
-@END
+@TF_END_{0}
 0;JMP
 
-(END)
+(TF_END_{0})
 @SP
 M=M+1
 """
@@ -239,10 +243,6 @@ GT_CMD = \
 D=M
 @y
 D=D-M
-@TRUE
-D;JGT
-@FALSE
-0;JMP
 """
 
 LT_CMD = \
@@ -251,10 +251,6 @@ LT_CMD = \
 D=M
 @y
 D=D-M
-@TRUE
-D;JLT
-@FALSE
-0;JMP
 """
 
 NEG_CMD = \
@@ -277,10 +273,13 @@ AND_CMD = \
 D=M
 @y
 D=D&M
-@TRUE
-D;JGT
-@FALSE
-0;JMP
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
 """
 
 OR_CMD = \
@@ -289,18 +288,25 @@ OR_CMD = \
 D=M
 @y
 D=D|M
-@TRUE
-D;JGT
-@FALSE
-0;JMP
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
 """
 
 NOT_CMD = \
 """
 @x
 D=M
-@TRUE
-D;JEQ
-@FALSE
-0;JMP
+D=!D
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
 """
