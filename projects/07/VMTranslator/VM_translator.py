@@ -133,37 +133,11 @@ def parser(lines_of_code, filename):
         print command_wrapper(lexer(line), filename)
 
 
-pop_exp_1 = "pop argument 2"
-pop_exp_2 = "pop argument 1"
-pop_exp_3 = "pop local 0"
-push_exm1 = "push this 6"
-
-if __name__ == "__main__":
-    # code = read_vm_file("/home/oren/Nand2Tetris/nand2tetris/projects/07/VMTranslator/and.vm")
-    # parser(code)
-    # quit()
-    # code = read_vm_file("/home/oren/Nand2Tetris/nand2tetris/projects/07/StackArithmetic/StackTest/StackTest.vm")
-    # parser(code)
-    # quit()
-    # print parser(["pop temp 6"])
-    # quit()
-    filename = sys.argv[1]
+def main(filename):
     code = read_vm_file(filename)
     classname = filename.split(".")[0]
     parser(code, classname)
-    quit()
 
-    print POP_X_Y_CMD
-    print EQ_CMD
-    quit()
-    code = read_vm_file("../test2.vm")
 
-    parser(code)
-    quit()
-    print write_push_code(12, SP, 0)
-    print write_pop_code(ARG, 3)
-    quit()
-    # print PUSH_CMD.format(3)
-    # print POP_CMD.format(2)
-    # for line in read_vm_file("../test2.vm"):
-    #     print line
+if __name__ == "__main__":
+    main(sys.argv[1])
