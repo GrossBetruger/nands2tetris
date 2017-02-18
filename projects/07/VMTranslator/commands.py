@@ -308,3 +308,82 @@ M=D
 @SP
 M=M+1
 """
+
+LABEL_CMD = \
+"""
+({})
+"""
+
+IF_GOTO_CMD = \
+"""
+@x
+D=M
+@{}
+D;JNE
+"""
+
+GOTO_CMD = \
+"""
+@{}
+0;JMP
+"""
+
+# save endFrame var (address of LCL)
+# dereference 5 addresses less than endFrame and save to retAddr
+PREPARE_TO_RETURN = \
+"""
+@LCL
+D=M
+@endFrame
+M=D
+
+@5
+D=A
+@endFrame
+D=M-D
+
+@retAddr
+M=D
+
+"""
+
+SP_TO_CALLER_PREPARE = \
+"""
+@ARG
+A=M+1
+D=A
+
+@SP
+M=D
+"""
+
+# SP_TO_CALLER_CMD = \
+# """
+# @callerSP
+# D=M
+# @SP
+# M=D
+# """
+
+# dereference saved memory segment location
+# return memory segment to saved value
+
+RESTORE_SEGMENT = \
+"""
+@{0}
+D=A
+@endFrame
+D=M-D
+A=D
+D=M
+
+@{1}
+M=D
+"""
+
+GOTO_RETURN_ADDRESS = \
+"""
+@retAddr
+A=M
+0;JMP
+"""
