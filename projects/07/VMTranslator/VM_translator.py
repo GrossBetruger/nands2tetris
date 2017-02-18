@@ -3,10 +3,11 @@ from commands import *
 import sys
 
 # Arithmetic operations
-BOOLEAN_OPERATIONS = set(['eq', 'gt', 'lt', 'or', 'and', 'not'])
+OFFSET_ZERO = "0"
+BOOLEAN_OPERATIONS = {'eq', 'gt', 'lt', 'or', 'and', 'not'}
 BOOL_COUNT = 0
 ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT = 0, 1, 2, 3, 4, 5, 6, 7, 8
-ARITHMETIC_COMMANDS = set(['add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', 'not'])
+ARITHMETIC_COMMANDS = {'add', 'sub', 'neg', 'eq', 'gt', 'lt', 'and', 'or', 'not'}
 
 # Memory operations
 PUSH, POP = 9, 10
@@ -14,7 +15,8 @@ PUSH, POP = 9, 10
 # VM memory segments
 SP, LCL, ARG, THIS, THAT, TEMP = 0, 1, 2, 3, 4, 5
 
-DEST_DICT = {"local": "LCL", "argument" : "ARG", "this": "THIS", "that" : "THAT", "temp": "TEMP"}
+DEST_DICT = {"local": "LCL", "argument" : "ARG", "this": "THIS", "that": "THAT",
+             "temp": "TEMP", "static": "STATIC", "pointer": "POINTER"}
 
 # Command types
 C_ARITHMETIC, C_PUSH, C_POP, C_LABEL, \
@@ -40,14 +42,14 @@ def lexer(command):
     return command.split(delimiter)
 
 
-def command_wrapper(lexems):
+def command_wrapper(lexems, filename):
     cmd_type = lexems[0]
     command_counter(cmd_type)
     if cmd_type in ARITHMETIC_COMMANDS:
         return arithmetic_wrapper(cmd_type)
     else:
         dest, offset = lexems[1], lexems[2]
-        return memory_wrapper(cmd_type, dest, offset)
+        return memory_wrapper(cmd_type, dest, offset, filename)
 
 
 def glue_commands(cmd_lst):
@@ -77,7 +79,7 @@ def arithmetic_wrapper(cmd_type):
 
     logical_and = glue_commands([POP_X_Y_CMD, AND_CMD])
     logical_or = glue_commands([POP_X_Y_CMD, OR_CMD])
-    logical_not = glue_commands([POP_X_Y_CMD, NOT_CMD])
+    logical_not = glue_commands([POP_X_CMD, NOT_CMD])
 
     add = glue_commands([POP_X_Y_CMD, ADD_CMD])
     sub = glue_commands([POP_X_Y_CMD, SUB_CMD])
@@ -91,33 +93,44 @@ def arithmetic_wrapper(cmd_type):
     return ARITHMETIC_DICT[cmd_type]
 
 
-def memory_wrapper(cmd_type, dest, offset):
+def memory_wrapper(cmd_type, dest, offset, filename):
     dest = DEST_DICT.get(dest)
     if cmd_type == C_PUSH:
-        return write_push_code(dest, offset)
+        return write_push_code(dest, offset, filename)
     elif cmd_type == C_POP:
-        return write_pop_code(dest, offset)
+        return write_pop_code(dest, offset, filename)
 
 
-def write_push_code(stack_base, offset):
+def write_push_code(stack_base, offset, filename):
     if stack_base == "TEMP":
-        return PUSH_CMD_CONST.format(5 + int(offset))
-    if stack_base == None:
+        return PUSH_CMD_TEMP.format(5 + int(offset))
+    elif stack_base == "STATIC":
+        return PUSH_STATIC.format(filename, offset)
+    elif stack_base == "POINTER":
+        address = THIS if offset == OFFSET_ZERO else THAT
+        return PUSH_POINTER.format(address)
+    if stack_base is None:
         return PUSH_CMD_CONST.format(offset)
 
     return PUSH_CMD.format(offset, stack_base)
 
 
-def write_pop_code(stack_base, offset):
+def write_pop_code(stack_base, offset, filename):
     if stack_base == "TEMP":
         return POP_CMD_CONST.format(5 + int(offset))
+    elif stack_base == "STATIC":
+        return POP_STATIC.format(filename, offset)
+    elif stack_base == "POINTER":
+        address = THIS if offset == OFFSET_ZERO else THAT
+        return POP_POINTER.format(address)
+
     return POP_CMD.format(offset, stack_base)
 
 
-def parser(lines_of_code):
+def parser(lines_of_code, filename):
     for line in lines_of_code:
         print r"//", line
-        print command_wrapper(lexer(line))
+        print command_wrapper(lexer(line), filename)
 
 
 pop_exp_1 = "pop argument 2"
@@ -134,10 +147,12 @@ if __name__ == "__main__":
     # quit()
     # print parser(["pop temp 6"])
     # quit()
-    code = read_vm_file(sys.argv[1])
-    parser(code)
+    filename = sys.argv[1]
+    code = read_vm_file(filename)
+    classname = filename.split(".")[0]
+    parser(code, classname)
     quit()
-    
+
     print POP_X_Y_CMD
     print EQ_CMD
     quit()

@@ -1,4 +1,3 @@
-
 PUSH_CMD = \
 """
 @{0}
@@ -29,6 +28,58 @@ M=D
 M=M+1
 """
 
+PUSH_CMD_TEMP = \
+"""
+@{}
+D=M
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
+"""
+
+PUSH_STATIC = \
+"""
+@{0}.{1}
+D=M
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
+"""
+
+PUSH_POINTER = \
+"""
+@{}
+D=M
+
+@SP
+A=M
+M=D
+
+@SP
+M=M+1
+"""
+
+POP_POINTER = \
+"""
+@SP
+A=M-1
+D=M
+
+@{}
+M=D
+
+@SP
+M=M-1
+"""
+
 POP_CMD = \
 """
 @{0}
@@ -43,6 +94,19 @@ A=M-1
 D=M
 @target_address
 A=M
+M=D
+
+@SP
+M=M-1
+"""
+
+POP_STATIC = \
+"""
+@SP
+A=M-1
+D=M
+
+@{0}.{1}
 M=D
 
 @SP
@@ -67,39 +131,6 @@ M=D
 M=M-1
 """
 
-# ADD_CMD = \
-# """
-# @SP
-# A=M-1
-# D=M
-# @y
-# M=D
-#
-# @SP
-# M=M-1
-#
-# @SP
-# A=M-1
-# D=M
-# @x
-# M=D
-#
-# @SP
-# M=M-1
-#
-# @x
-# D=M
-# @y
-# D=D+M
-#
-# @SP
-# A=M
-# M=D
-#
-# @SP
-# M=M+1
-# """
-
 ADD_CMD = \
 """
 @x
@@ -114,39 +145,6 @@ M=D
 @SP
 M=M+1
 """
-
-# SUB_CMD = \
-# """
-# @SP
-# A=M-1
-# D=M
-# @y
-# M=D
-#
-# @SP
-# M=M-1
-#
-# @SP
-# A=M-1
-# D=M
-# @x
-# M=D
-#
-# @SP
-# M=M-1
-#
-# @x
-# D=M
-# @y
-# D=D-M
-#
-# @SP
-# A=M
-# M=D
-#
-# @SP
-# M=M+1
-# """
 
 # NOTE: y is popped before x, y is subtracted from x
 SUB_CMD = \
@@ -219,7 +217,7 @@ BOOL_RESULT_CMD= \
 (TRUE_{0})
 @SP
 A=M
-M=1
+M=-1
 
 @TF_END_{0}
 0;JMP
